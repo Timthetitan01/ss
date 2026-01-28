@@ -8,16 +8,18 @@
     <style>
         :root {
             --bg-color: #000000;
-            --card-bg: rgba(30, 30, 30, 0.4);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --card-hover-border: rgba(255, 255, 255, 0.2);
-            --accent: #0A84FF;
-            --danger: #FF453A;
+            /* Apple "Dark Material" simulation */
+            --card-bg: rgba(30, 30, 35, 0.55);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --accent-blue: #0A84FF;
+            --accent-green: #30D158;
+            --accent-red: #FF453A;
+            --accent-orange: #FF9F0A;
             --text-main: #FFFFFF;
-            --text-sub: #98989D;
-            --blur: 30px;
-            --radius: 22px;
-            --shadow: 0 4px 24px rgba(0,0,0,0.2);
+            --text-secondary: rgba(235, 235, 245, 0.6);
+            --blur-strength: 50px;
+            --radius: 26px;
+            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -25,8 +27,11 @@
         body {
             margin: 0; padding: 0;
             background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 50% 0%, #2c2c2e 0%, #000000 70%);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
+            /* Richer, deeper gradient */
+            background-image: 
+                radial-gradient(circle at 0% 0%, #2c3e50 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, #000000 0%, #1a1a1a 100%);
+            font-family: var(--font-stack);
             color: var(--text-main);
             height: 100vh;
             display: flex;
@@ -43,52 +48,63 @@
             z-index: 10;
         }
 
-        h1 { font-size: 22px; font-weight: 600; margin: 0; opacity: 0.9; }
-
-        .btn-glass {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--card-border);
-            color: var(--text-main);
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s ease;
+        h1 { 
+            font-size: 24px; 
+            font-weight: 700; 
+            margin: 0; 
+            letter-spacing: 0.5px;
         }
-        .btn-glass:hover { background: rgba(255, 255, 255, 0.2); }
-        .btn-glass.active { background: var(--text-main); color: black; }
 
-        /* --- Grid --- */
+        /* Apple-style pill button */
+        .btn-pill {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(10px);
+        }
+        .btn-pill:hover { background: rgba(255, 255, 255, 0.25); }
+        .btn-pill.active { background: white; color: black; }
+
+        /* --- Grid Layout --- */
         .dashboard-container {
             flex: 1;
             padding: 20px 40px;
             overflow-y: auto;
+            /* Hide scrollbar */
+            scrollbar-width: none; 
         }
+        .dashboard-container::-webkit-scrollbar { display: none; }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            grid-auto-rows: 220px;
-            gap: 20px;
+            grid-auto-rows: 210px; /* Standard iOS Widget height ratio */
+            gap: 24px;
             max-width: 1400px;
             margin: 0 auto;
-            padding-bottom: 40px;
+            padding-bottom: 60px;
         }
 
-        /* --- Card Styles --- */
+        /* --- Card Aesthetics --- */
         .card {
             background: var(--card-bg);
-            border: 1px solid var(--card-border);
+            /* Inset shadow simulates a super-thin border better than actual border */
+            box-shadow: 0 0 0 1px var(--card-border) inset, 0 20px 40px rgba(0,0,0,0.4);
             border-radius: var(--radius);
-            backdrop-filter: blur(var(--blur));
-            -webkit-backdrop-filter: blur(var(--blur));
+            /* The "Vibrant" material effect */
+            backdrop-filter: blur(var(--blur-strength)) saturate(160%);
+            -webkit-backdrop-filter: blur(var(--blur-strength)) saturate(160%);
             position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: default;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .card.span-2 { grid-column: span 2; }
@@ -96,160 +112,174 @@
 
         .card-content {
             flex: 1;
-            padding: 24px;
+            padding: 22px;
             display: flex;
             flex-direction: column;
             width: 100%;
             height: 100%;
         }
 
-        /* Edit Mode Styles */
+        /* --- Edit Mode Animation --- */
         body.editing .card:not(.is-empty) {
-            animation: shake 0.4s infinite ease-in-out alternate;
+            animation: jiggle 0.28s infinite linear alternate;
             cursor: grab;
-            border-color: var(--accent);
-            background: rgba(40, 40, 40, 0.6);
+            z-index: 10;
         }
-        body.editing .card:not(.is-empty):active { cursor: grabbing; }
-
-        @keyframes shake {
-            0% { transform: rotate(-0.5deg); }
-            100% { transform: rotate(0.5deg); }
+        body.editing .card:not(.is-empty):active { cursor: grabbing; scale: 1.05; }
+        
+        @keyframes jiggle {
+            0% { transform: rotate(-1.2deg); }
+            100% { transform: rotate(1.2deg); }
         }
 
-        /* Delete Button */
-        .delete-btn {
+        /* Remove Button (iOS Style) */
+        .remove-btn {
             position: absolute;
-            top: -10px;
-            right: -10px;
-            width: 36px;
-            height: 36px;
-            background: var(--danger);
+            top: -12px; left: -12px;
+            width: 30px; height: 30px;
+            background: rgba(100, 100, 100, 0.8);
+            backdrop-filter: blur(10px);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            opacity: 0;
-            pointer-events: none;
-            transition: 0.2s;
-            z-index: 100;
-            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.9);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            opacity: 0; pointer-events: none;
+            transition: 0.2s; z-index: 100; cursor: pointer;
         }
-        body.editing .card:not(.is-empty) .delete-btn {
-            opacity: 1;
-            pointer-events: auto;
-            top: 8px;
-            right: 8px;
+        .remove-btn svg { width: 14px; height: 14px; fill: currentColor; }
+        
+        body.editing .card:not(.is-empty) .remove-btn {
+            opacity: 1; pointer-events: auto;
+            top: 8px; left: 8px; /* Top left corner like iOS */
         }
+        .remove-btn:hover { background: var(--accent-red); color: white; }
 
-        /* Empty State / Add Button */
+        /* Empty / Add State */
         .card.is-empty {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: none;
             border: 2px dashed rgba(255,255,255,0.1);
-            display: none; /* Hidden normally */
-            align-items: center;
-            justify-content: center;
+            display: none;
+            align-items: center; justify-content: center;
         }
-        body.editing .card.is-empty {
-            display: flex;
-        }
-        .add-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            font-size: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+        body.editing .card.is-empty { display: flex; animation: none; }
+        
+        .add-icon {
+            font-size: 30px; color: rgba(255,255,255,0.3);
             transition: 0.2s;
         }
-        .add-btn:hover { background: var(--accent); }
+        .card.is-empty:hover { background: rgba(255,255,255,0.06); cursor: pointer; }
+        .card.is-empty:hover .add-icon { color: white; transform: scale(1.1); }
 
-        /* --- Widgets Content --- */
+        /* --- Typography & Specifics --- */
         .w-header {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-sub);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 13px; font-weight: 600; text-transform: uppercase;
+            color: var(--text-secondary); letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
         }
+        .w-icon-svg { width: 14px; height: 14px; fill: var(--text-secondary); }
 
-        /* Clock */
-        .clock-time { font-size: 56px; font-weight: 200; letter-spacing: -2px; line-height: 1; }
-        .clock-date { font-size: 16px; color: var(--text-sub); margin-top: 8px; }
+        /* Clock Widget */
+        .clock-time { 
+            font-size: 68px; font-weight: 200; 
+            letter-spacing: -3px; line-height: 1; 
+            margin-top: auto; 
+            font-variant-numeric: tabular-nums;
+        }
+        .clock-date { font-size: 17px; font-weight: 500; color: var(--accent-red); margin-top: 5px; }
 
-        /* Weather */
-        .weather-temp { font-size: 48px; font-weight: 600; }
-        .weather-cond { font-size: 16px; opacity: 0.8; }
-        .weather-bg { background: linear-gradient(135deg, #3a7bd5, #00d2ff); color: white; }
+        /* Weather Widget */
+        .weather-card { background: linear-gradient(160deg, #38618d 0%, #76a8d6 100%); color: white; }
+        .weather-layout { display: flex; flex-direction: column; height: 100%; justify-content: space-between; }
+        .temp-large { font-size: 58px; font-weight: 300; letter-spacing: -2px; }
+        .weather-detail { font-size: 15px; font-weight: 500; opacity: 0.9; }
+        .weather-hl { font-size: 13px; opacity: 0.7; margin-top: 4px; }
 
-        /* Stats */
+        /* Music Widget */
+        .music-layout { display: flex; gap: 20px; align-items: center; height: 100%; }
+        .album-art { 
+            width: 90px; height: 90px; 
+            border-radius: 14px; 
+            background: #222; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4); 
+            background-size: cover; background-position: center;
+            flex-shrink: 0;
+        }
+        .music-text { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+        .track-name { font-size: 18px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .artist-name { font-size: 15px; color: var(--text-secondary); margin-top: 4px; }
+        
+        .media-controls { display: flex; gap: 22px; margin-top: 15px; align-items: center; }
+        .media-btn { background: none; border: none; padding: 0; cursor: pointer; color: white; opacity: 0.8; transition: 0.2s; }
+        .media-btn:hover { opacity: 1; }
+        .media-btn svg { width: 22px; height: 22px; fill: currentColor; }
+        .play-icon svg { width: 32px; height: 32px; }
+
+        /* Stats Widget */
         .stat-row { margin-top: auto; }
-        .stat-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 6px 0 14px 0; overflow: hidden; }
-        .stat-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-        .stat-meta { display: flex; justify-content: space-between; font-size: 13px; color: #ccc; }
+        .stat-group { margin-bottom: 12px; }
+        .stat-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #bbb; margin-bottom: 6px; }
+        .progress-track { height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 10px; }
 
-        /* Music */
-        .music-widget { display: flex; gap: 20px; align-items: center; height: 100%; }
-        .album-cover { width: 100px; height: 100px; border-radius: 12px; background: #333; box-shadow: 0 5px 15px rgba(0,0,0,0.3); flex-shrink: 0; background-size: cover; background-position: center;}
-        .music-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .song-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .artist { color: var(--text-sub); font-size: 14px; }
-        .controls { display: flex; gap: 15px; margin-top: 15px; }
-        .ctrl-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0; opacity: 0.8; }
-        .ctrl-btn:hover { opacity: 1; }
+        /* Apps Grid */
+        .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: auto; }
+        .app-item { 
+            aspect-ratio: 1; border-radius: 14px; 
+            background: rgba(255,255,255,0.1); 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; cursor: pointer; transition: 0.2s;
+        }
+        .app-item:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
 
-        /* --- Modal for Selection --- */
+        /* --- Modal (iOS Sheet Style) --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
             z-index: 200;
             display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: 0.3s;
+            opacity: 0; pointer-events: none; transition: 0.3s ease;
         }
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
         
         .modal {
             background: #1c1c1e;
-            border: 1px solid var(--card-border);
-            width: 90%; max-width: 500px;
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            transform: scale(0.9); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 100%; max-width: 420px;
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+            transform: scale(0.95) translateY(20px); 
+            transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);
         }
-        .modal-overlay.open .modal { transform: scale(1); }
+        .modal-overlay.open .modal { transform: scale(1) translateY(0); }
 
-        .modal h2 { margin-top: 0; margin-bottom: 20px; }
-        .widget-list { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .widget-option {
-            background: rgba(255,255,255,0.05);
-            padding: 15px; border-radius: 16px;
-            cursor: pointer; border: 1px solid transparent;
-            display: flex; align-items: center; gap: 10px;
+        .modal h2 { font-size: 20px; margin: 0 0 20px 0; text-align: center; }
+        
+        .widget-options { display: flex; flex-direction: column; gap: 10px; }
+        .widget-opt {
+            display: flex; align-items: center; gap: 15px;
+            padding: 16px; border-radius: 18px;
+            background: rgba(255,255,255,0.08);
+            cursor: pointer; transition: 0.2s;
         }
-        .widget-option:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
-        .w-icon { font-size: 24px; }
-        .w-name { font-weight: 500; }
+        .widget-opt:hover { background: rgba(255,255,255,0.12); transform: scale(1.02); }
+        .opt-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--accent-blue); color: white; }
+        .opt-info { flex: 1; }
+        .opt-title { font-weight: 600; font-size: 15px; }
+        .opt-desc { font-size: 13px; color: var(--text-secondary); }
 
         /* Sortable Ghost */
-        .sortable-ghost { opacity: 0.4; background: var(--accent) !important; }
+        .sortable-ghost { opacity: 0.2; transform: scale(0.95); }
+        .sortable-drag { cursor: grabbing; opacity: 1; transform: scale(1.05); box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 999;}
+
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Second Screen</h1>
-        <button class="btn-glass" id="editBtn">Customize</button>
+        <h1>My Dashboard</h1>
+        <button class="btn-pill" id="editBtn">Customize</button>
     </header>
 
     <div class="dashboard-container">
@@ -260,106 +290,123 @@
     <div class="modal-overlay" id="modal">
         <div class="modal">
             <h2>Add Widget</h2>
-            <div class="widget-list" id="widgetList">
+            <div class="widget-options" id="widgetList">
                 </div>
-            <button class="btn-glass" style="margin-top: 20px; width: 100%;" onclick="closeModal()">Cancel</button>
+            <button class="btn-pill" style="margin-top: 20px; width: 100%; background: #2c2c2e;" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
     <script>
-        // --- Widget Data Definitions ---
+        // --- SVG Icons (Stored as strings for cleaner HTML injection) ---
+        const icons = {
+            remove: '<svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>',
+            clock: '<svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>',
+            weather: '<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>',
+            stats: '<svg viewBox="0 0 24 24"><path d="M3 3v18h18V3H3zm6 12H5V7h4v8zm4 0H9V9h4v6zm4 0h-4v-4h4v4zm4 0h-4v-6h4v6z"/></svg>',
+            music: '<svg viewBox="0 0 24 24"><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>',
+            note: '<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>',
+            apps: '<svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>',
+            play: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+            prev: '<svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>',
+            next: '<svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>'
+        };
+
+        // --- Widget Configuration ---
         const widgetTypes = {
             clock: {
-                name: "Clock", icon: "🕒", size: "1x1",
+                name: "Clock", desc: "Local time & date", color: "#FF453A", icon: icons.clock, size: "1x1",
                 render: () => `
                     <div class="card-content">
-                        <div class="w-header">Local Time</div>
-                        <div style="margin-top:auto;">
-                            <div class="clock-time" id="clock-${Date.now()}">00:00</div>
-                            <div class="clock-date" id="date-${Date.now()}">Loading...</div>
-                        </div>
+                        <div class="w-header">${icons.clock} <span>Time</span></div>
+                        <div class="clock-time" id="clock-${Date.now()}">--:--</div>
+                        <div class="clock-date" id="date-${Date.now()}">Loading...</div>
                     </div>`
             },
             weather: {
-                name: "Weather", icon: "⛅", size: "1x1",
-                class: "weather-bg",
+                name: "Weather", desc: "Current conditions", color: "#30D158", icon: icons.weather, size: "1x1",
+                class: "weather-card",
                 render: () => `
                     <div class="card-content">
-                        <div class="w-header" style="color:white; opacity:0.8;">San Francisco</div>
-                        <div style="margin-top:auto;">
-                            <div class="weather-temp">72°</div>
-                            <div class="weather-cond">Partly Cloudy<br>H:76° L:62°</div>
+                        <div class="weather-layout">
+                            <div class="w-header" style="color:white; opacity:0.8;">${icons.weather} <span>Cupertino</span></div>
+                            <div>
+                                <div class="temp-large">68°</div>
+                                <div class="weather-detail">Partly Cloudy</div>
+                                <div class="weather-hl">H:72° L:58°</div>
+                            </div>
                         </div>
                     </div>`
             },
             stats: {
-                name: "System Stats", icon: "📊", size: "1x1",
+                name: "System", desc: "CPU & RAM usage", color: "#0A84FF", icon: icons.stats, size: "1x1",
                 render: () => `
                     <div class="card-content">
-                        <div class="w-header">System Load</div>
+                        <div class="w-header">${icons.stats} <span>System</span></div>
                         <div class="stat-row">
-                            <div class="stat-meta"><span>CPU</span><span>34%</span></div>
-                            <div class="stat-bar"><div class="stat-fill" style="width:34%; background:#FF3B30;"></div></div>
-                            <div class="stat-meta"><span>RAM</span><span>62%</span></div>
-                            <div class="stat-bar"><div class="stat-fill" style="width:62%; background:#30D158;"></div></div>
+                            <div class="stat-group">
+                                <div class="stat-label"><span>CPU</span><span>32%</span></div>
+                                <div class="progress-track"><div class="progress-fill" style="width:32%; background:var(--accent-blue);"></div></div>
+                            </div>
+                            <div class="stat-group" style="margin-bottom:0;">
+                                <div class="stat-label"><span>RAM</span><span>58%</span></div>
+                                <div class="progress-track"><div class="progress-fill" style="width:58%; background:var(--accent-green);"></div></div>
+                            </div>
                         </div>
                     </div>`
             },
             music: {
-                name: "Music Player", icon: "🎵", size: "2x1",
+                name: "Music", desc: "Now Playing", color: "#BF5AF2", icon: icons.music, size: "2x1",
                 render: () => `
                     <div class="card-content">
-                        <div class="music-widget">
-                            <div class="album-cover" style="background-image: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80');"></div>
-                            <div class="music-info">
-                                <div class="song-title">Midnight City</div>
-                                <div class="artist">M83 • Hurry Up, We're Dreaming</div>
-                                <div class="controls">
-                                    <button class="ctrl-btn">⏮</button>
-                                    <button class="ctrl-btn">▶</button>
-                                    <button class="ctrl-btn">⏭</button>
+                        <div class="music-layout">
+                            <div class="album-art" style="background-image: url('https://images.unsplash.com/photo-1493225255756-d9584f8606e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80');"></div>
+                            <div class="music-text">
+                                <div class="track-name">Blinding Lights</div>
+                                <div class="artist-name">The Weeknd</div>
+                                <div class="media-controls">
+                                    <button class="media-btn">${icons.prev}</button>
+                                    <button class="media-btn play-icon">${icons.play}</button>
+                                    <button class="media-btn">${icons.next}</button>
                                 </div>
                             </div>
                         </div>
                     </div>`
             },
             apps: {
-                name: "Quick Launch", icon: "🚀", size: "2x1",
+                name: "Shortcuts", desc: "Quick Launch", color: "#FF9F0A", icon: icons.apps, size: "1x1",
                 render: () => `
                     <div class="card-content">
-                        <div class="w-header">Dock</div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; height:100%; padding:0 10px;">
-                            <div style="font-size:32px;">💬</div>
-                            <div style="font-size:32px;">✉️</div>
-                            <div style="font-size:32px;">🎵</div>
-                            <div style="font-size:32px;">🌍</div>
-                            <div style="font-size:32px;">⚙️</div>
+                        <div class="w-header">${icons.apps} <span>Shortcuts</span></div>
+                        <div class="app-grid">
+                            <div class="app-item" style="color:#0A84FF;">✉️</div>
+                            <div class="app-item" style="color:#30D158;">💬</div>
+                            <div class="app-item" style="color:#FF453A;">🎵</div>
+                            <div class="app-item" style="color:#FF9F0A;">⚙️</div>
                         </div>
                     </div>`
             },
-            notes: {
-                name: "Quick Note", icon: "📝", size: "1x1",
+            note: {
+                name: "Note", desc: "Quick thoughts", color: "#FFD60A", icon: icons.note, size: "1x1",
                 render: () => `
                     <div class="card-content">
-                        <div class="w-header">Note</div>
-                        <textarea style="background:transparent; border:none; color:white; font-family:inherit; font-size:14px; resize:none; height:100%; outline:none;">Remember to check the server logs at 5pm.</textarea>
+                        <div class="w-header">${icons.note} <span>Note</span></div>
+                        <textarea style="background:transparent; border:none; color:var(--text-main); font-family:inherit; font-size:15px; resize:none; height:100%; outline:none; line-height:1.4;" placeholder="Tap to type..."></textarea>
                     </div>`
             }
         };
 
         // --- State Management ---
-        // 'null' represents an empty slot
         let gridState = [
             'clock', 'weather', 'music', 
-            'stats', 'notes', 'apps', 
-            null, null // Extras
+            'stats', 'apps', 'note',
+            null, null // Empty slots
         ];
         
-        // Track the index currently being edited
         let currentEditIndex = -1;
         let isEditing = false;
+        let updateInterval;
 
-        // --- Initialization ---
+        // --- Core Functions ---
         const gridEl = document.getElementById('grid');
         const editBtn = document.getElementById('editBtn');
         const modal = document.getElementById('modal');
@@ -367,18 +414,15 @@
 
         // Initialize SortableJS
         let sortable = new Sortable(gridEl, {
-            animation: 150,
+            animation: 300,
             ghostClass: 'sortable-ghost',
-            disabled: true, // Disabled by default, enabled in edit mode
+            dragClass: 'sortable-drag',
+            disabled: true,
+            delay: 100, // Slight delay to prevent accidental drags on touch
             onEnd: function (evt) {
-                // Update Array based on new DOM order
-                const itemEl = evt.item;
-                const newIndex = evt.newIndex;
-                const oldIndex = evt.oldIndex;
-                
-                // Move item in array
-                const item = gridState.splice(oldIndex, 1)[0];
-                gridState.splice(newIndex, 0, item);
+                // Reorder array based on drag
+                const item = gridState.splice(evt.oldIndex, 1)[0];
+                gridState.splice(evt.newIndex, 0, item);
             }
         });
 
@@ -393,34 +437,30 @@
                 if (type === null) {
                     // Empty Slot
                     card.classList.add('is-empty');
-                    card.innerHTML = `<div class="add-btn" onclick="openWidgetSelector(${index})">+</div>`;
+                    card.innerHTML = `<div class="add-icon" onclick="openWidgetSelector(${index})">+</div>`;
                 } else {
                     // Render Widget
                     const wConfig = widgetTypes[type];
-                    
-                    // Handle Sizes
                     if (wConfig.size === '2x1') card.classList.add('span-2');
-                    if (wConfig.size === '2x2') card.classList.add('span-2-row'); // Support for taller widgets if added
                     if (wConfig.class) card.classList.add(wConfig.class);
 
-                    // Inject HTML
+                    // Insert Content
                     card.innerHTML = wConfig.render();
 
-                    // Add Delete Button
-                    const delBtn = document.createElement('div');
-                    delBtn.className = 'delete-btn';
-                    delBtn.innerHTML = '×';
-                    delBtn.onclick = (e) => {
-                        e.stopPropagation(); // Prevent drag start
+                    // Insert Remove Button
+                    const removeBtn = document.createElement('div');
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.innerHTML = icons.remove;
+                    removeBtn.onclick = (e) => {
+                        e.stopPropagation(); // Stop bubble so we don't select the card
                         removeWidget(index);
                     };
-                    card.appendChild(delBtn);
+                    card.appendChild(removeBtn);
                 }
 
                 gridEl.appendChild(card);
             });
 
-            // Re-bind live clocks
             updateClocks();
         }
 
@@ -457,12 +497,12 @@
                 document.body.classList.add('editing');
                 editBtn.textContent = 'Done';
                 editBtn.classList.add('active');
-                sortable.option("disabled", false); // Enable Dragging
+                sortable.option("disabled", false);
             } else {
                 document.body.classList.remove('editing');
                 editBtn.textContent = 'Customize';
                 editBtn.classList.remove('active');
-                sortable.option("disabled", true); // Disable Dragging
+                sortable.option("disabled", true);
             }
         });
 
@@ -470,17 +510,23 @@
         Object.keys(widgetTypes).forEach(key => {
             const w = widgetTypes[key];
             const div = document.createElement('div');
-            div.className = 'widget-option';
-            div.innerHTML = `<span class="w-icon">${w.icon}</span><span class="w-name">${w.name}</span><span style="margin-left:auto; color:#666; font-size:12px;">${w.size}</span>`;
+            div.className = 'widget-opt';
+            div.innerHTML = `
+                <div class="opt-icon" style="background:${w.color};">${w.icon}</div>
+                <div class="opt-info">
+                    <div class="opt-title">${w.name}</div>
+                    <div class="opt-desc">${w.desc}</div>
+                </div>
+            `;
             div.onclick = () => addWidget(key);
             widgetListEl.appendChild(div);
         });
 
-        // Live Clock Update
+        // Live Clock
         function updateClocks() {
             const now = new Date();
-            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const dateStr = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/^0+/, ''); // remove leading zero
+            const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric' });
 
             document.querySelectorAll('.clock-time').forEach(el => el.textContent = timeStr);
             document.querySelectorAll('.clock-date').forEach(el => el.textContent = dateStr);
